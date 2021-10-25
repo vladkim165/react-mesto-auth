@@ -8,6 +8,10 @@ import CurrentUserContext from '../contexts/CurrentUserContext.js'
 import EditProfilePopup from './EditProfilePopup/EditProfilePopup.js'
 import EditAvatarPopup from './EditAvatarPopup/EditAvatarPopup.js'
 import AddPlacePopup from './AddPlacePopup/AddPlacePopup.js'
+import { Route, Link, Switch } from "react-router-dom";
+import ProtectedRoute from './ProtectedRoute/ProtectedRoute.js'
+import Register from './Register/Register.js'
+import Login from './Login/Login.js'
 
 function App() {
 
@@ -17,6 +21,7 @@ function App() {
   const [isEditAvatarPopupOpen, setIsEditAvatarPopupOpen] = React.useState(false)
   const [selectedCard, setSelectedCard] = React.useState({ name: '', link: '' })
   const [cards, setCards] = React.useState([])
+  const [loggedIn, setLoggedIn] = React.useState(false)
 
   function handleEditAvatarClick() {
     setIsEditAvatarPopupOpen(true);
@@ -55,7 +60,7 @@ function App() {
   function handleUpdateAvatar(url) {
     api.changeAvatar(url)
       .then((res) => {
-        setCurrentUser({...currentUser, avatar: res.avatar})
+        setCurrentUser({ ...currentUser, avatar: res.avatar })
         closeAllPopups()
       })
       .catch((err) => {
@@ -118,24 +123,36 @@ function App() {
       setCards([res, ...cards])
       closeAllPopups()
     })
-    .catch((err) => {
-      console.log(`Ошибка: ${err}`)
-    })
+      .catch((err) => {
+        console.log(`Ошибка: ${err}`)
+      })
   }
 
   return (
     <CurrentUserContext.Provider value={currentUser}>
-      <div className="page">
-        <Header />
-        <Main onEditProfile={handleEditProfileClick} onAddPlace={handleAddPlaceClick}
-          onCardLike={handleCardLike} onCardDelete={handleCardDelete} cards={cards}
-          onEditAvatar={handleEditAvatarClick} onCardClick={handleCardClick} />
-        <Footer />
-        <EditProfilePopup isOpen={isEditProfilePopupOpen} onClose={closeAllPopups} onUpdateUser={handleUpdateUser} />
-        <AddPlacePopup isOpen={isAddPlacePopupOpen} onClose={closeAllPopups} onAddPlace={handleAddPlace} />
-        <EditAvatarPopup isOpen={isEditAvatarPopupOpen} onClose={closeAllPopups} onUpdateAvatar={handleUpdateAvatar} />
-        <ImagePopup card={selectedCard} onClose={closeAllPopups} />
-      </div>
+      <Switch>
+        <Route path="/sign-up">
+          <Register loggedIn={loggedIn} />
+        </Route>
+        <Route path="/sign-in" >
+          <Login loggedIn={loggedIn} />
+        </Route>
+        <ProtectedRoute path="/" loggedIn={loggedIn} components={
+          <>
+            <div className="page">
+              <Header buttonName="Выйти" loggedIn={loggedIn} />
+              <Main onEditProfile={handleEditProfileClick} onAddPlace={handleAddPlaceClick}
+                onCardLike={handleCardLike} onCardDelete={handleCardDelete} cards={cards}
+                onEditAvatar={handleEditAvatarClick} onCardClick={handleCardClick} />
+              <Footer />
+              <EditProfilePopup isOpen={isEditProfilePopupOpen} onClose={closeAllPopups} onUpdateUser={handleUpdateUser} />
+              <AddPlacePopup isOpen={isAddPlacePopupOpen} onClose={closeAllPopups} onAddPlace={handleAddPlace} />
+              <EditAvatarPopup isOpen={isEditAvatarPopupOpen} onClose={closeAllPopups} onUpdateAvatar={handleUpdateAvatar} />
+              <ImagePopup card={selectedCard} onClose={closeAllPopups} />
+            </div>
+          </>
+        } />
+      </Switch>
     </CurrentUserContext.Provider>
   );
 }
