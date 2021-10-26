@@ -5,6 +5,10 @@
   border: none;
   background-color: transparent;
   transition: opacity 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
 }
 
 .header__button:hover {

@@ -8,12 +8,15 @@ import CurrentUserContext from '../contexts/CurrentUserContext.js'
 import EditProfilePopup from './EditProfilePopup/EditProfilePopup.js'
 import EditAvatarPopup from './EditAvatarPopup/EditAvatarPopup.js'
 import AddPlacePopup from './AddPlacePopup/AddPlacePopup.js'
-import { Route, Link, Switch } from "react-router-dom";
+import { Route, Switch, useHistory } from "react-router-dom";
 import ProtectedRoute from './ProtectedRoute/ProtectedRoute.js'
 import Register from './Register/Register.js'
 import Login from './Login/Login.js'
+import { register, authorize, getContent } from '../utils/Auth'
 
 function App() {
+
+  const history = useHistory()
 
   const [currentUser, setCurrentUser] = React.useState({ name: '', about: '', avatar: '' })
   const [isEditProfilePopupOpen, setIsEditProfilePopupOpen] = React.useState(false)
@@ -22,6 +25,75 @@ function App() {
   const [selectedCard, setSelectedCard] = React.useState({ name: '', link: '' })
   const [cards, setCards] = React.useState([])
   const [loggedIn, setLoggedIn] = React.useState(false)
+  const [isInfoToolTipOpen, setIsInfoToolTipOpen] = React.useState(false)
+  const [isResponseOk, setIsResponseOk] = React.useState(null)
+
+
+  function handleRegister(password, email) {
+    register(password, email)
+      .then((res) => {
+        if (res.ok) {
+          setIsInfoToolTipOpen(true)
+          setIsResponseOk(true)
+        }
+        else {
+          setIsInfoToolTipOpen(true)
+          setIsResponseOk(false)
+        }
+      })
+  }
+
+  function handleAuthorize(password, email) {
+    authorize(password, email)
+      .then((res) => {
+        if (res.ok) {
+          return res.json()
+        }
+        else {
+          setIsInfoToolTipOpen(true)
+          setIsResponseOk(false)
+        }
+      })
+      .then((data) => {
+        if (data.token) {
+          localStorage.setItem('token', data.token);
+        }
+        handleTokenCheck()
+        setLoggedIn(true)
+      })
+      .catch((err) => {
+        console.log(err)
+      })
+  }
+
+  function handleTokenCheck() {
+    const jwt = localStorage.getItem('token');
+    if (jwt) {
+      getContent(jwt)
+        .then((res) => {
+          return res.json()
+        })
+        .then((res) => {
+          setLoggedIn(true)
+          setCurrentUser({ ...currentUser, email: res.data.email })
+        })
+        .catch((err) => console.log(err))
+    }
+  }
+
+  function handleDeleteToken() {
+    localStorage.removeItem('token')
+    history.push('/sign-in')
+    setLoggedIn(false)
+  }
+
+  function handleOpenInfoToolTip() {
+    setIsInfoToolTipOpen(true)
+  }
+
+  function handleIsResponseOk(boolean) {
+    setIsResponseOk(boolean)
+  }
 
   function handleEditAvatarClick() {
     setIsEditAvatarPopupOpen(true);
@@ -43,6 +115,7 @@ function App() {
     setIsEditAvatarPopupOpen(false)
     setIsEditProfilePopupOpen(false)
     setIsAddPlacePopupOpen(false)
+    setIsInfoToolTipOpen(false)
     setSelectedCard({ name: '', link: '' })
   }
 
@@ -69,9 +142,21 @@ function App() {
   }
 
   React.useEffect(() => {
+    handleTokenCheck()
+  }, [])
+
+  React.useEffect(() => {
+    if (loggedIn === true) {
+      history.push('/')
+    }
+  }, [loggedIn])
+
+  React.useEffect(() => {
     api.getUserInfo()
       .then((userInfo) => {
-        setCurrentUser(userInfo)
+        setCurrentUser(pre => ({
+          ...pre, ...userInfo
+        }))
       })
       .catch((err) => {
         console.log(`Ошибка: ${err}`)
@@ -128,19 +213,22 @@ function App() {
       })
   }
 
+
   return (
     <CurrentUserContext.Provider value={currentUser}>
       <Switch>
         <Route path="/sign-up">
-          <Register loggedIn={loggedIn} />
+          <Register loggedIn={loggedIn} isOpen={isInfoToolTipOpen} onRegister={handleRegister}
+            onInfo={handleOpenInfoToolTip} onClose={closeAllPopups} isOk={isResponseOk} onResponse={handleIsResponseOk} />
         </Route>
         <Route path="/sign-in" >
-          <Login loggedIn={loggedIn} />
+          <Login loggedIn={loggedIn} isOpen={isInfoToolTipOpen} onLogin={handleAuthorize}
+            onInfo={handleOpenInfoToolTip} isOk={isResponseOk} onClose={closeAllPopups} onResponse={handleIsResponseOk} />
         </Route>
         <ProtectedRoute path="/" loggedIn={loggedIn} components={
           <>
             <div className="page">
-              <Header buttonName="Выйти" loggedIn={loggedIn} />
+              <Header buttonName="Выйти" loggedIn={loggedIn} path={"/sign-in"} onLogOut={handleDeleteToken} />
               <Main onEditProfile={handleEditProfileClick} onAddPlace={handleAddPlaceClick}
                 onCardLike={handleCardLike} onCardDelete={handleCardDelete} cards={cards}
                 onEditAvatar={handleEditAvatarClick} onCardClick={handleCardClick} />
@@ -156,6 +244,7 @@ function App() {
     </CurrentUserContext.Provider>
   );
 }
+
 
 export default App
 
