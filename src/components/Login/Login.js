@@ -1,6 +1,5 @@
 import React from 'react';
 import Header from '../Header/Header';
-import InfoToolTip from '../InfoToolTip/InfoToolTip';
 
 function Login(props) {
 
@@ -16,14 +15,9 @@ function Login(props) {
 
   function handleSubmit(e) {
     e.preventDefault()
-    if (!password && !email) {
-      props.onInfo()
-      props.onResponse(false)
-      return
-    }
+
     props.onLogin(password, email)
   }
-
 
   return (
     <div className="page">
@@ -38,7 +32,6 @@ function Login(props) {
           <button className="form__save-button account__save-button" type="submit">Войти</button>
         </form>
       </main>
-      <InfoToolTip isOpen={props.isOpen} isOk={props.isOk} onClose={props.onClose} />
     </div>
   )
 }

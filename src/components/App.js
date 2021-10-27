@@ -13,6 +13,7 @@ import ProtectedRoute from './ProtectedRoute/ProtectedRoute.js'
 import Register from './Register/Register.js'
 import Login from './Login/Login.js'
 import { register, authorize, getContent } from '../utils/Auth'
+import InfoToolTip from './InfoToolTip/InfoToolTip.js'
 
 function App() {
 
@@ -28,31 +29,22 @@ function App() {
   const [isInfoToolTipOpen, setIsInfoToolTipOpen] = React.useState(false)
   const [isResponseOk, setIsResponseOk] = React.useState(null)
 
-
   function handleRegister(password, email) {
     register(password, email)
       .then((res) => {
-        if (res.ok) {
-          setIsInfoToolTipOpen(true)
-          setIsResponseOk(true)
-        }
-        else {
-          setIsInfoToolTipOpen(true)
-          setIsResponseOk(false)
-        }
+        setIsResponseOk(true)
       })
+      .catch((err) => {
+        setIsResponseOk(false)
+        console.log(`Ошибка: ${err}`)
+      })
+      .finally(() => setIsInfoToolTipOpen(true))
   }
 
   function handleAuthorize(password, email) {
     authorize(password, email)
       .then((res) => {
-        if (res.ok) {
-          return res.json()
-        }
-        else {
-          setIsInfoToolTipOpen(true)
-          setIsResponseOk(false)
-        }
+        return res.json()
       })
       .then((data) => {
         if (data.token) {
@@ -62,7 +54,9 @@ function App() {
         setLoggedIn(true)
       })
       .catch((err) => {
-        console.log(err)
+        setIsInfoToolTipOpen(true)
+        setIsResponseOk(false)
+        console.log(`Ошибка: ${err}`)
       })
   }
 
@@ -77,7 +71,7 @@ function App() {
           setLoggedIn(true)
           setCurrentUser({ ...currentUser, email: res.data.email })
         })
-        .catch((err) => console.log(err))
+        .catch((err) => console.log(`Ошибка: ${err}`))
     }
   }
 
@@ -85,14 +79,6 @@ function App() {
     localStorage.removeItem('token')
     history.push('/sign-in')
     setLoggedIn(false)
-  }
-
-  function handleOpenInfoToolTip() {
-    setIsInfoToolTipOpen(true)
-  }
-
-  function handleIsResponseOk(boolean) {
-    setIsResponseOk(boolean)
   }
 
   function handleEditAvatarClick() {
@@ -213,17 +199,27 @@ function App() {
       })
   }
 
+  function handleOpenInfoToolTip(boolean) {
+    setIsInfoToolTipOpen(boolean)
+  }
+
+  function handleIsResponseOk() {
+    setIsResponseOk(true)
+  }
+
 
   return (
     <CurrentUserContext.Provider value={currentUser}>
       <Switch>
         <Route path="/sign-up">
-          <Register loggedIn={loggedIn} isOpen={isInfoToolTipOpen} onRegister={handleRegister}
-            onInfo={handleOpenInfoToolTip} onClose={closeAllPopups} isOk={isResponseOk} onResponse={handleIsResponseOk} />
+          <Register loggedIn={loggedIn} onRegister={handleRegister}
+            onInfo={handleOpenInfoToolTip} onResponse={handleIsResponseOk} />
+          <InfoToolTip isOpen={isInfoToolTipOpen} isOk={isResponseOk} onClose={closeAllPopups} />
         </Route>
         <Route path="/sign-in" >
-          <Login loggedIn={loggedIn} isOpen={isInfoToolTipOpen} onLogin={handleAuthorize}
-            onInfo={handleOpenInfoToolTip} isOk={isResponseOk} onClose={closeAllPopups} onResponse={handleIsResponseOk} />
+          <Login loggedIn={loggedIn} onLogin={handleAuthorize}
+            onInfo={handleOpenInfoToolTip} onResponse={handleIsResponseOk} />
+          <InfoToolTip isOpen={isInfoToolTipOpen} isOk={isResponseOk} onClose={closeAllPopups} />
         </Route>
         <ProtectedRoute path="/" loggedIn={loggedIn} components={
           <>

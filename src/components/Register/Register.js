@@ -1,7 +1,6 @@
 import React from 'react';
 import Header from '../Header/Header';
 import { Link } from 'react-router-dom'
-import InfoToolTip from '../InfoToolTip/InfoToolTip';
 
 function Register(props) {
 
@@ -17,11 +16,7 @@ function Register(props) {
 
   function handleSubmit(e) {
     e.preventDefault()
-    if (!password && !email) {
-      props.onInfo()
-      props.onResponse(false)
-      return
-    }
+
     props.onRegister(password, email)
   }
 
@@ -39,7 +34,6 @@ function Register(props) {
           <Link to="/sign-in" className="account__redirect">Уже зарегистрированы? Войти</Link>
         </form>
       </main>
-      <InfoToolTip isOpen={props.isOpen} isOk={props.isOk} onClose={props.onClose} />
     </div>
   )
 

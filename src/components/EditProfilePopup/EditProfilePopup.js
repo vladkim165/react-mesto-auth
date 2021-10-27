@@ -28,26 +28,24 @@ const EditProfilePopup = (props) => {
   React.useEffect(() => {
     setName(userContext.name)
     setDescription(userContext.about)
-  }, [userContext])
+  }, [userContext, props.isOpen])
 
   return (
     <PopupWithForm name="edit-profile" title="Редактировать профиль" onSubmit={handleSubmit}
-      isOpen={props.isOpen} onClose={props.onClose}
-      children={(
-        <>
-          <section className="form__section">
-            <input className="form__field form__field_input_name" type="text" name="name" id="name-input" required
-              autoComplete="off" minLength="2" maxLength="40" value={name} onChange={handleChangeName} />
-            <span className="form__field-error" id="name-input-error"></span>
-          </section>
-          <section className="form__section">
-            <input className="form__field form__field_input_bio" type="text" name="info" id="bio-input" required
-              autoComplete="off" minLength="2" maxLength="200" value={description} onChange={handleChangeDescription} />
-            <span className="form__field-error" id="bio-input-error"></span>
-          </section>
-        </>
-      )}
-    />
+      isOpen={props.isOpen} onClose={props.onClose}>
+      <>
+        <section className="form__section">
+          <input className="form__field form__field_input_name" type="text" name="name" id="name-input" required
+            autoComplete="off" minLength="2" maxLength="40" value={name} onChange={handleChangeName} />
+          <span className="form__field-error" id="name-input-error"></span>
+        </section>
+        <section className="form__section">
+          <input className="form__field form__field_input_bio" type="text" name="info" id="bio-input" required
+            autoComplete="off" minLength="2" maxLength="200" value={description} onChange={handleChangeDescription} />
+          <span className="form__field-error" id="bio-input-error"></span>
+        </section>
+      </>
+    </PopupWithForm>
   );
 };
 
